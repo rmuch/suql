@@ -10,6 +10,8 @@ class Uncompiler extends CodeGenerator[String] {
     case IntExpr(value) => value.toString
     case DecimalExpr(value) => value.toString
     case StringExpr(value) => "\"" + s"$value" + "\"" // FIXME: Bug for a s"" format string containing escaped quotes?
+    case ListExpr(List()) => "[]"
+    case ListExpr(values) => "[ " + values.map(generate).mkString(", ") + " ]"
     case AndExpr(left, right) => s"${generate(left)} ${Symbols.AndOp} ${generate(right)}"
     case OrExpr(left, right) => s"${generate(left)} ${Symbols.OrOp} ${generate(right)}"
     case NotExpr(u) => s"!${generate(u)}"
@@ -17,7 +19,7 @@ class Uncompiler extends CodeGenerator[String] {
     case NeqExpr(left, right) => s"${generate(left)} ${Symbols.NeqOp} ${generate(right)}"
     case GtExpr(left, right) => s"${generate(left)} ${Symbols.GtOp} ${generate(right)}"
     case LtExpr(left, right) => s"${generate(left)} ${Symbols.LtOp} ${generate(right)}"
-    case CallExpr(name, args) => name + "(" + args.map(a => generate(a)).mkString(", ") + ")"
+    case CallExpr(name, args) => name + "(" + args.map(generate).mkString(", ") + ")"
     case _ => ???
   }
 }

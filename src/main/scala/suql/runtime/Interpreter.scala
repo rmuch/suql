@@ -77,6 +77,7 @@ object Value {
     case (IntValue(a), IntValue(b)) => a == b
     case (DecimalValue(a), DecimalValue(b)) => a == b
     case (StringValue(a), StringValue(b)) => a == b
+    case (ListValue(a), ListValue(b)) => if (a.length != b.length) false else a.zip(b).forall({case (x, y) => x == y})
     case _ => throw new SuqlRuntimeError(s"Unsupported equality comparison ($left, $right)")
   }
 
@@ -192,6 +193,7 @@ class Interpreter {
       case IntExpr(value) => IntValue(value)
       case DecimalExpr(value) => DecimalValue(value)
       case StringExpr(value) => StringValue(value)
+      case ListExpr(values) => ListValue(values.map(eval))
       case AndExpr(left, right) => (eval(left), eval(right)) match {
         case (BoolValue(a), BoolValue(b)) => BoolValue(a && b)
         case v => throw new SuqlRuntimeError(s"${queryExpr.getLine}:${queryExpr.getCol}: operator && (binary boolean and) " +

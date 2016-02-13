@@ -26,10 +26,12 @@ class SuqlPackratParser extends Parser with RegexParsers with PackratParsers {
   private lazy val and: PackratParser[AndExpr] = (expr ~ "&&" ~ expr) ^^ { case left ~ op ~ right => AndExpr(left, right) }
   private lazy val or: PackratParser[OrExpr] = (expr ~ "||" ~ expr) ^^ { case left ~ op ~ right => OrExpr(left, right) }
 
+  private lazy val list: PackratParser[ListExpr] = ("[" ~> repsep(expr, ",") <~ "]") ^^ { case exprs => ListExpr(exprs) }
+
   private lazy val call: PackratParser[CallExpr] =
     (identifierRegex ~ "(" ~ repsep(expr, ",") ~ ")") ^^ { case name ~ lbr ~ csl ~ rbr => CallExpr(name, csl) }
 
-  private lazy val uexpr: PackratParser[Expr] = pexpr1 | npexpr | call | not | bool | dec | int | str | id
+  private lazy val uexpr: PackratParser[Expr] = pexpr1 | npexpr | call | list | not | bool | dec | int | str | id
 
   private lazy val npexpr: PackratParser[Expr] = eq | neq
 
