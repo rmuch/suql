@@ -40,6 +40,7 @@ case class BoolExpr(boolValue: Boolean) extends Expr
 case class IntExpr(value: Long) extends Expr
 case class DecimalExpr(value: BigDecimal) extends Expr
 case class StringExpr(value: String) extends Expr
+case class ListExpr(exprs: List[Expr]) extends Expr
 case class AndExpr(left: Expr, right: Expr) extends Expr
 case class OrExpr(left: Expr, right: Expr) extends Expr
 case class NotExpr(expr: Expr) extends Expr

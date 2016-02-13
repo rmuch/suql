@@ -25,7 +25,10 @@ class ParserTestCasesSpec extends UnitSpec with TableDrivenPropertyChecks {
     "false" -> BoolExpr(false),
     "123" -> IntExpr(123),
     "123.456" -> DecimalExpr(123.456),
-    "\"hello world\"" -> StringExpr("hello world")
+    "\"hello world\"" -> StringExpr("hello world"),
+    "[]" -> ListExpr(List()),
+    "[1,2,3]" -> ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(3))),
+    "[1,\"b\",true]" -> ListExpr(List(IntExpr(1), StringExpr("b"), BoolExpr(true)))
   )
 
   val countryTestCases = HashMap(

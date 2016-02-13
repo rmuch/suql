@@ -41,11 +41,17 @@ class EqualityTestCasesSpec extends UnitSpec {
     EqExpr(BoolExpr(false), IntExpr(1)) -> BoolValue(false)
   )
 
+  val listEqualityTestCases = HashMap(
+    EqExpr(ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(3))), ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(3)))) -> BoolValue(true),
+    EqExpr(ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(3))), ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(4)))) -> BoolValue(false)
+  )
+
   val testCases = basicTestCases ++
     // dynamicCastTestCases ++
     staticCastTestCases ++
     stringTestCases ++
-    // boolToIntImplicitTestCases
+    // boolToIntImplicitTestCases ++
+    listEqualityTestCases ++
     HashMap()
 
   val interpreter = new Interpreter
