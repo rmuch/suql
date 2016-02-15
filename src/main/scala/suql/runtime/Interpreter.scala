@@ -8,7 +8,7 @@ import scala.collection.immutable.HashMap
 /** Abstract base class for the interpreter's internal representation of a value. */
 abstract class Value
 
-case class ListValue[T](list: List[T]) extends Value
+case class ListValue(list: List[Value]) extends Value
 case class BoolValue(value: Boolean) extends Value
 case class IntValue(value: Long) extends Value
 case class DecimalValue(value: BigDecimal) extends Value
@@ -123,7 +123,7 @@ object Value {
   def dynamicTestOrder(left: Value, right: Value): Int = valueToBigDecimal(left) compare valueToBigDecimal(right)
 
   def valueToExpr(value: Value): Expr = value match {
-    case ListValue(_) => ???
+    case ListValue(l) => ListExpr(l.map(valueToExpr))
     case BoolValue(a) => BoolExpr(a)
     case IntValue(a) => IntExpr(a)
     case DecimalValue(a) => DecimalExpr(a)
@@ -133,7 +133,7 @@ object Value {
   }
 
   def anyToValue(any: Any): Value = any match {
-    case l: List[Any] => ListValue(l)
+    case l: List[Any] => ListValue(l.map(anyToValue))
     case b: Boolean => BoolValue(b)
     case i: Integer => IntValue(i.toLong)
     case i: Long => IntValue(i)
