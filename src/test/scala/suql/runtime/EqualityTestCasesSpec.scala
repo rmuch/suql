@@ -46,7 +46,22 @@ class EqualityTestCasesSpec extends UnitSpec {
     EqExpr(ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(3))), ListExpr(List(IntExpr(1), IntExpr(2), IntExpr(4)))) -> BoolValue(false)
   )
 
-  val testCases = basicTestCases ++
+  def invertExpr(expr: Expr) = expr match {
+    case EqExpr(left, right) => NeqExpr(left , right)
+    case NeqExpr(left, right) => EqExpr(left, right)
+    case GtExpr(left, right) => LtExpr(left, right)
+    case LtExpr(left, right) => GtExpr(left, right)
+    case other => other
+  }
+
+  def invertValue(value: Value) = value match {
+    case BoolValue(b) => BoolValue(!b)
+    case other => other
+  }
+
+  val orderTestCases = basicTestCases
+
+  val equalityTestCases =
     // dynamicCastTestCases ++
     staticCastTestCases ++
     stringTestCases ++
@@ -58,8 +73,22 @@ class EqualityTestCasesSpec extends UnitSpec {
 
   implicit val runtimeContext = new RuntimeContext(new NullMemberResolver, new NullMemberResolver)
 
-  for ((expressionTree, evaluatedValue) <- testCases) {
+  for ((expressionTree, evaluatedValue) <- orderTestCases) {
     it should s"evaluate (${uncompiler.generate(expressionTree)}) to (${Value.valueToString(evaluatedValue)})" in {
+      interpreter.eval(expressionTree) shouldBe evaluatedValue
+    }
+  }
+
+  for ((expressionTree, evaluatedValue) <- equalityTestCases) {
+    it should s"evaluate (${uncompiler.generate(expressionTree)}) to (${Value.valueToString(evaluatedValue)})" in {
+      interpreter.eval(expressionTree) shouldBe evaluatedValue
+    }
+  }
+
+  val invertedEqualityTestCases = equalityTestCases map { case (e, v) => (invertExpr(e), invertValue(v)) }
+
+  for ((expressionTree, evaluatedValue) <- invertedEqualityTestCases) {
+    it should s"evaluate (${uncompiler.generate(expressionTree)}) to (${Value.valueToString(evaluatedValue)}) (inverted)" in {
       interpreter.eval(expressionTree) shouldBe evaluatedValue
     }
   }

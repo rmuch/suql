@@ -32,7 +32,10 @@ class FunctionCallCasesSpec extends UnitSpec {
     ),
     "typeof" -> List(
       (List(StringValue("hello")), StringValue("string")),
-      (List(IntValue(495)), StringValue("int"))
+      (List(IntValue(495)), StringValue("int")),
+      (List(DecimalValue(40.50)), StringValue("decimal")),
+      (List(BoolValue(false)), StringValue("bool")),
+      (List(ListValue(List())), StringValue("list"))
     )
   ).flatMap { case (functionName, itsTestCases) =>
     itsTestCases.map({ case (args, expectedReturn) =>
