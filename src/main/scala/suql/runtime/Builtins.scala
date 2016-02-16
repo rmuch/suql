@@ -3,6 +3,7 @@ package suql.runtime
 import suql.errors.{SuqlRuntimeException, SuqlRuntimeError}
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable
 import scala.util.parsing.combinator.RegexParsers
 
 private class FunctionSignature(val name: String, val args: Map[String, String], val returns: String) {
@@ -49,7 +50,7 @@ private class FunctionSignatureParser {
 trait BuiltinProviderBase {
   private[runtime] type Builtin = List[Value] => Value
 
-  private[runtime] var builtinMap: scala.collection.mutable.HashMap[FunctionSignature, Builtin]
+  private[runtime] var builtinMap: mutable.HashMap[FunctionSignature, Builtin] = new mutable.HashMap[FunctionSignature, Builtin]
 
   private def builtinNameMap = builtinMap.map({ case (signature, _) => (signature.name, signature) }) // TODO: Memoize
 
@@ -65,18 +66,13 @@ trait BuiltinProviderBase {
       case None => throw new SuqlRuntimeException(s"Builtin function with name $name does not exist.")
     }
   }
-
-  builtinMap += (
-    FunctionSignature("bool test1(string, string)") -> null,
-    FunctionSignature("bool test2(string, string)") -> null
-  )
 }
 
 trait BuiltinErrorHandling {
   def !!! : Nothing = throw new SuqlRuntimeError("invalid argument")
 }
 
-trait StringBuiltins extends BuiltinErrorHandling {
+trait StringBuiltins extends BuiltinProviderBase with BuiltinErrorHandling {
   private[suql] def startsWith(args: List[Value]): Value = args match {
     case List(StringValue(a), StringValue(b)) => BoolValue(a startsWith b)
     case _ => !!!
@@ -96,9 +92,16 @@ trait StringBuiltins extends BuiltinErrorHandling {
     case List(StringValue(a)) => StringValue(a.toLowerCase)
     case _ => !!!
   }
+
+  builtinMap += (
+    FunctionSignature("bool starts_with(string, string)") -> startsWith,
+    FunctionSignature("bool ends_with(string, string)") -> endsWith,
+    FunctionSignature("string to_upper(string)") -> toUpper,
+    FunctionSignature("string to_lower(string)") -> toLower
+  )
 }
 
-trait ConversionBuiltins extends BuiltinErrorHandling {
+trait ConversionBuiltins extends BuiltinProviderBase with BuiltinErrorHandling {
   private[suql] def intToString(args: List[Value]): Value = args match {
     case List(IntValue(a)) => StringValue(a.toString)
     case _ => !!!
@@ -113,6 +116,12 @@ trait ConversionBuiltins extends BuiltinErrorHandling {
     case List(v: Value) => StringValue(Value.getTypeName(v))
     case _ => !!!
   }
+
+  builtinMap += (
+    FunctionSignature("string int_to_string(int)") -> intToString,
+    FunctionSignature("int string_to_int(string)") -> stringToInt,
+    FunctionSignature("string typeof(any)") -> typeOf
+  )
 }
 
 trait DebugBuiltins extends BuiltinProviderBase with BuiltinErrorHandling {
@@ -126,33 +135,6 @@ trait DebugBuiltins extends BuiltinProviderBase with BuiltinErrorHandling {
   )
 }
 
-trait BuiltinsImpl extends StringBuiltins with ConversionBuiltins {
-  private type Builtin = List[Value] => Value
-
-  private val builtinMap: HashMap[FunctionSignature, Builtin] = HashMap(
-    FunctionSignature("bool starts_with(string, string)") -> startsWith,
-    FunctionSignature("bool ends_with(string, string)") -> endsWith,
-    FunctionSignature("string to_upper(string)") -> toUpper,
-    FunctionSignature("string to_lower(string)") -> toLower,
-    FunctionSignature("string int_to_string(int)") -> intToString,
-    FunctionSignature("int string_to_int(string)") -> stringToInt,
-    FunctionSignature("string typeof(any)") -> typeOf
-  )
-
-  private val builtinNameMap = builtinMap.map({ case (signature, _) => (signature.name, signature) })
-
-  def exists(name: String): Boolean = builtinNameMap.get(name).isDefined
-
-  def call(name: String, args: List[Value]): Value = {
-    builtinNameMap.get(name) match {
-      case Some(signature) => builtinMap.get(signature) match {
-        case Some(builtin) => builtin(args)
-        case None => throw new SuqlRuntimeError(s"Builtin function with name $name exists in the name map but not " +
-          s"the function map.")
-      }
-      case None => throw new SuqlRuntimeException(s"Builtin function with name $name does not exist.")
-    }
-  }
-}
+trait BuiltinsImpl extends StringBuiltins with ConversionBuiltins
 
 object Builtins extends BuiltinsImpl
