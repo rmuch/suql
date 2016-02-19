@@ -1,8 +1,7 @@
 package suql.runtime
 
-import suql.errors.{SuqlRuntimeException, SuqlRuntimeError}
+import suql.errors.{SuqlRuntimeArgumentException, SuqlRuntimeError, SuqlRuntimeException}
 
-import scala.collection.immutable.HashMap
 import scala.collection.mutable
 import scala.util.parsing.combinator.RegexParsers
 
@@ -59,7 +58,14 @@ trait BuiltinProviderBase {
   def call(name: String, args: List[Value]): Value = {
     builtinNameMap.get(name) match {
       case Some(signature) => builtinMap.get(signature) match {
-        case Some(builtin) => builtin(args)
+        case Some(builtin) =>
+          try {
+            builtin(args)
+          } catch {
+            case e: SuqlRuntimeArgumentException =>
+              val friendlyArgList = args.map(Value.getTypeName)
+              throw new SuqlRuntimeArgumentException(s"Function with signature '$signature' called with invalid arguments '$friendlyArgList'.")
+          }
         case None => throw new SuqlRuntimeError(s"Builtin function with name $name exists in the name map but not " +
           s"the function map.")
       }
@@ -69,7 +75,7 @@ trait BuiltinProviderBase {
 }
 
 trait BuiltinErrorHandling {
-  def !!! : Nothing = throw new SuqlRuntimeError("invalid argument")
+  def !!! : Nothing = throw new SuqlRuntimeArgumentException("invalid argument")
 }
 
 trait StringBuiltins extends BuiltinProviderBase with BuiltinErrorHandling {
