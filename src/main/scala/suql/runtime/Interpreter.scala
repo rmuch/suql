@@ -133,6 +133,7 @@ object Value {
   }
 
   def anyToValue(any: Any): Value = any match {
+    case a if a == null => UnitValue()
     case l: List[Any] => ListValue(l.map(anyToValue))
     case b: Boolean => BoolValue(b)
     case i: Integer => IntValue(i.toLong)
@@ -172,7 +173,14 @@ class RuntimeContext(val localMemberResolver: MemberResolver, val modelMemberRes
   def resolveIdentifier(identifier: String)(implicit runtimeContext: RuntimeContext): Option[Value] =
     localMemberResolver.get(identifier) orElse modelMemberResolver.get(identifier)
 
-  def doFunctionCall(name: String, args: List[Value]): Value = ???
+  /**
+    * Applies a function by name, with the provided arguments.
+    *
+    * @param name The name of the function to call.
+    * @param args An argument list of Value objects.
+    * @return
+    */
+  def applyFunction(name: String, args: List[Value]): Value = Builtins.call(name, args)
 }
 
 /** Class Interpreter implements a simple AST walker to interpret a SUQL script. */
@@ -187,7 +195,8 @@ class Interpreter {
     queryExpr match {
       case IdentifierExpr(identifier) => runtimeContext.resolveIdentifier(identifier) match {
         case Some(identifierValue) => identifierValue
-        case None => ???
+        case None => throw new SuqlRuntimeError(s"${queryExpr.getLine}:${queryExpr.getCol}: variable '$identifier' " +
+          s"is undefined")
       }
       case BoolExpr(boolValue) => BoolValue(boolValue)
       case IntExpr(value) => IntValue(value)
@@ -213,7 +222,7 @@ class Interpreter {
       case NeqExpr(left, right) => BoolValue(!Value.testEquivalence(eval(left), eval(right)))
       case GtExpr(left, right) => BoolValue(Value.testOrder(eval(left), eval(right)) > 0)
       case LtExpr(left, right) => BoolValue(Value.testOrder(eval(left), eval(right)) < 0)
-      case CallExpr(name, args) => Builtins.call(name, args map eval)
+      case CallExpr(name, args) => runtimeContext.applyFunction(name, args map eval)
       case _ => ???
     }
   }

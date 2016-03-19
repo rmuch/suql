@@ -51,12 +51,14 @@ trait BuiltinProviderBase {
 
   private[runtime] var builtinMap: mutable.HashMap[FunctionSignature, Builtin] = new mutable.HashMap[FunctionSignature, Builtin]
 
-  private def builtinNameMap = builtinMap.map({ case (signature, _) => (signature.name, signature) }) // TODO: Memoize
+  def getFunctionMap = builtinMap
 
-  def exists(name: String): Boolean = builtinNameMap.get(name).isDefined
+  private def getBuiltinNameMap = builtinMap.map({ case (signature, _) => (signature.name, signature) }) // TODO: Memoize
+
+  def exists(name: String): Boolean = getBuiltinNameMap.get(name).isDefined
 
   def call(name: String, args: List[Value]): Value = {
-    builtinNameMap.get(name) match {
+    getBuiltinNameMap.get(name) match {
       case Some(signature) => builtinMap.get(signature) match {
         case Some(builtin) =>
           try {
@@ -64,7 +66,8 @@ trait BuiltinProviderBase {
           } catch {
             case e: SuqlRuntimeArgumentException =>
               val friendlyArgList = args.map(Value.getTypeName)
-              throw new SuqlRuntimeArgumentException(s"Function with signature '$signature' called with invalid arguments '$friendlyArgList'.")
+              throw new SuqlRuntimeArgumentException(s"Function with signature '$signature' called with invalid " +
+                s"arguments '$friendlyArgList'.")
           }
         case None => throw new SuqlRuntimeError(s"Builtin function with name $name exists in the name map but not " +
           s"the function map.")
