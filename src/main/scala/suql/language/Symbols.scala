@@ -8,4 +8,8 @@ object Symbols {
   val NotOp = "!"
   val GtOp = ">"
   val LtOp = "<"
+
+  val LeftListDelimiter = "["
+  val ListSeparator = ","
+  val RightListDelimiter = "]"
 }
