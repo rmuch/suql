@@ -56,5 +56,17 @@ class SuqlPackratParser extends Parser with RegexParsers with PackratParsers {
     parseResult.get
   }
 
+  def parseStringE(string: String): Either[String, Expr] = {
+    val packratReader = new PackratReader[Char](new CharSequenceReader(string))
+    val parseResult: ParseResult[Expr] = parse(expr, packratReader)
+
+    println(parseResult)
+
+    parseResult match {
+      case Success(result, next) => Right(result)
+      case NoSuccess(failureMessage, next) => Left(failureMessage)
+    }
+  }
+
   override def ___parse(input: String): Expr = parseString(input)
 }
