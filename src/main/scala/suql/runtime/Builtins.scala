@@ -51,7 +51,7 @@ trait BuiltinProviderBase {
 
   private[runtime] var builtinMap: mutable.HashMap[FunctionSignature, Builtin] = new mutable.HashMap[FunctionSignature, Builtin]
 
-  def getFunctionMap = builtinMap
+  private def getFunctionMap = builtinMap
 
   private def getBuiltinNameMap = builtinMap.map({ case (signature, _) => (signature.name, signature) }) // TODO: Memoize
 
