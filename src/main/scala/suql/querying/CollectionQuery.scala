@@ -46,7 +46,7 @@ class CollectionQuery {
 
     implicit val runtimeContext = new RuntimeContext(nullMemberResolver, objectMemberResolver)
 
-    val parsedQuery = parser.parseString(query)
+    val parsedQuery = parser.___parseOrThrow(query)
 
     dataSet filter { q =>
       objectMemberResolver.setInstance(q)

@@ -42,7 +42,7 @@ class ParserTestCasesSpec extends UnitSpec with TableDrivenPropertyChecks {
 
   for ((testCase, expressionTree) <- validParserTestCases) {
     it should s"parse ($testCase)" in {
-      parser.parseString(testCase) shouldBe expressionTree
+      parser.___parse(testCase) shouldBe Right(expressionTree)
     }
   }
 }

@@ -13,7 +13,7 @@ class ParserErrorTestCasesSpec extends UnitSpec {
 
   for ((input, errorDescription) <- errorTestCases) {
     it should s"fail to parse $errorDescription" in {
-      parser.parseStringE(input).isLeft shouldBe true
+      parser.___parse(input).isLeft shouldBe true
     }
   }
 }

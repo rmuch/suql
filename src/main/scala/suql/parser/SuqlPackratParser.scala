@@ -45,18 +45,9 @@ class SuqlPackratParser extends Parser with RegexParsers with PackratParsers {
   /** Attempts to parse a SUQL query expression represented as a string.
     *
     * @param string SUQL query expression.
-    * @return Parsed SUQL program.
+    * @return Left(error message) in case of failure, Right(SUQL expression tree) in case of success.
     */
-  def parseString(string: String): Expr = {
-    val packratReader = new PackratReader[Char](new CharSequenceReader(string))
-    val parseResult = parse(expr, packratReader)
-
-    println(parseResult)
-
-    parseResult.get
-  }
-
-  def parseStringE(string: String): Either[String, Expr] = {
+  private def parseString(string: String): Either[ParseError, Expr] = {
     val packratReader = new PackratReader[Char](new CharSequenceReader(string))
     val parseResult: ParseResult[Expr] = parse(expr, packratReader)
 
@@ -64,9 +55,10 @@ class SuqlPackratParser extends Parser with RegexParsers with PackratParsers {
 
     parseResult match {
       case Success(result, next) => Right(result)
-      case NoSuccess(failureMessage, next) => Left(failureMessage)
+      case NoSuccess(failureMessage, next) =>
+        Left(ParseError(Position(next.pos.line, next.pos.column), failureMessage))
     }
   }
 
-  override def ___parse(input: String): Expr = parseString(input)
+  override def ___parse(input: String): Either[ParseError, Expr] = parseString(input)
 }

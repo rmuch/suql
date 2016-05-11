@@ -1,6 +1,8 @@
 package suql.ast
 
-case class TokenInformation(line: Int, col: Int) // TODO
+case class TokenInformation(line: Int, col: Int)
+// TODO: Use parser.Position or refactor it out into a common lib?
+// TODO: Ensure combinator parser populates token information.
 
 /** The base class that all AST nodes derive from. */
 abstract class Expr {
